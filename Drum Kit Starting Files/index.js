@@ -1,3 +1,12 @@
+function animateButton(drumKey) {
+  console.log("Drum " + drumKey + " is doing something...");
+  var activeButton = document.querySelector("." + drumKey);
+  activeButton.classList.add("pressed");
+  setTimeout(function () {
+    activeButton.classList.remove("pressed")
+  }, 100);
+};
+
 function playSoundForDrum(drumKey) {
   switch (drumKey) {
     case "w":
@@ -37,15 +46,14 @@ function playSoundForDrum(drumKey) {
 
     default:
       console.log(drumKey);
-      return;
+      break;
   }
-
-  console.log("A drum was played!")
 }
 
 function handleClick() {
   var drumKey = this.innerHTML;
   playSoundForDrum(drumKey);
+  animateButton(drumKey);
 }
 
 var drums = document.querySelectorAll(".drum");
@@ -59,7 +67,7 @@ document.querySelectorAll(".drum").forEach(
 function handleKeyPress (keyEvent) {
   var drumKey = keyEvent.key;
   playSoundForDrum(drumKey);
-  console.log(drumKey + " was pressed!");
+  animateButton(drumKey);
 }
 
 document.addEventListener("keydown", handleKeyPress);
