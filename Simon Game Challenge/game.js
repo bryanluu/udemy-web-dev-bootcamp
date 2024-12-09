@@ -1,12 +1,15 @@
 const buttonColors = ["red", "blue", "green", "yellow"];
 const NUMBER_OF_BUTTONS = buttonColors.length;
 const FADE_TIME = 100;
-const WAIT_TIME = 500;
+const GAP_TIME = 500;
+const REPEAT_TIME = 7000;
+const RESTART_PAUSE_TIME = 1000;
 
 
 var gamePattern = [];
 var userClickedPattern = [];
 var level = 0;
+var sequenceRepeaterID = null;
 
 function flashButton(color) {
   $("#" + color).fadeOut(FADE_TIME).fadeIn(FADE_TIME);
@@ -27,11 +30,13 @@ function animateButtonInSequence (stepIndex) {
 
   setTimeout(function () {
     animateButtonInSequence(stepIndex + 1);
-  }, WAIT_TIME);
+  }, GAP_TIME);
 }
 
 function showSequence() {
   animateButtonInSequence(0);
+  // TODO remove debug statement
+  console.log(gamePattern, userClickedPattern);
 }
 
 function nextSequence() {
@@ -39,8 +44,6 @@ function nextSequence() {
   var randomChosenColor = buttonColors[randomNumber];
 
   gamePattern.push(randomChosenColor);
-
-  showSequence();
 
   $("#level-title").text("Level " + level);
 
@@ -58,16 +61,46 @@ function animateButtonPress(color) {
   }, FADE_TIME);
 }
 
+function showGamePattern() {
+  showSequence();
+  sequenceRepeaterID = setInterval(showSequence, REPEAT_TIME);
+}
+
+function startGame() {
+  nextSequence();
+  showGamePattern();
+}
+
+function restartGamePattern() {
+  userClickedPattern = [];
+  clearInterval(sequenceRepeaterID);
+  setTimeout(showGamePattern, RESTART_PAUSE_TIME);
+}
+
+function checkUserPattern() {
+  if (userClickedPattern.toString() == gamePattern.toString()) {
+    var sound = new Audio("sounds/correct.mp3");
+    sound.play();
+    restartGamePattern();
+    nextSequence();
+  } else {
+    for (var i = 0; i < userClickedPattern.length; i++) {
+      if (userClickedPattern[i] !== gamePattern[i]) {
+        var sound = new Audio("sounds/wrong.mp3");
+        sound.play();
+        restartGamePattern();
+        break;
+      }
+    }
+  }
+}
+
 function handleButtonClick(event) {
   var userChosenColor = event.target.id;
   userClickedPattern.push(userChosenColor);
   animateButtonPress(userChosenColor);
   playButtonSound(userChosenColor);
-  console.log(userClickedPattern);
-}
-
-function startGame() {
-  nextSequence();
+  checkUserPattern();
 }
 
 $(".btn").click(handleButtonClick);
