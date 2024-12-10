@@ -3,7 +3,8 @@ const NUMBER_OF_BUTTONS = buttonColors.length;
 const FADE_TIME = 100;
 const GAP_TIME = 500;
 const REPEAT_TIME = 7000;
-const RESTART_PAUSE_TIME = 1000;
+const REPLAY_PAUSE_TIME = 1000;
+const WRONG_FLASH_TIME = 200;
 
 
 var gamePattern = [];
@@ -33,10 +34,12 @@ function animateButtonInSequence (stepIndex) {
   }, GAP_TIME);
 }
 
-function showSequence() {
+function startSequence() {
   animateButtonInSequence(0);
-  // TODO remove debug statement
-  console.log(gamePattern, userClickedPattern);
+}
+
+function updateLevelTitle() {
+  $("#level-title").text("Level " + level);
 }
 
 function nextSequence() {
@@ -45,8 +48,7 @@ function nextSequence() {
 
   gamePattern.push(randomChosenColor);
 
-  $("#level-title").text("Level " + level);
-
+  updateLevelTitle();
   level++;
 
   return gamePattern;
@@ -62,8 +64,8 @@ function animateButtonPress(color) {
 }
 
 function showGamePattern() {
-  showSequence();
-  sequenceRepeaterID = setInterval(showSequence, REPEAT_TIME);
+  startSequence();
+  sequenceRepeaterID = setInterval(startSequence, REPEAT_TIME);
 }
 
 function startGame() {
@@ -71,24 +73,45 @@ function startGame() {
   showGamePattern();
 }
 
-function restartGamePattern() {
+function replayGamePattern() {
   userClickedPattern = [];
   clearInterval(sequenceRepeaterID);
-  setTimeout(showGamePattern, RESTART_PAUSE_TIME);
+  setTimeout(showGamePattern, REPLAY_PAUSE_TIME);
+}
+
+function startOver() {
+  level = 0;
+  updateLevelTitle();
+  gamePattern = [];
+  userClickedPattern = [];
+  clearInterval(sequenceRepeaterID);
+  $("#level-title").text("Game Over, Press Any Key to Restart")
+}
+
+function respondToCorrectPattern() {
+  var sound = new Audio("sounds/correct.mp3");
+  sound.play();
+  replayGamePattern();
+  nextSequence();
+}
+
+function respondToWrongPattern() {
+  var sound = new Audio("sounds/wrong.mp3");
+  sound.play();
+  startOver();
+  $("body").addClass("game-over");
+  setTimeout(function () {
+    $("body").removeClass("game-over");
+  }, WRONG_FLASH_TIME);
 }
 
 function checkUserPattern() {
   if (userClickedPattern.toString() == gamePattern.toString()) {
-    var sound = new Audio("sounds/correct.mp3");
-    sound.play();
-    restartGamePattern();
-    nextSequence();
+    respondToCorrectPattern();
   } else {
     for (var i = 0; i < userClickedPattern.length; i++) {
       if (userClickedPattern[i] !== gamePattern[i]) {
-        var sound = new Audio("sounds/wrong.mp3");
-        sound.play();
-        restartGamePattern();
+        respondToWrongPattern();
         break;
       }
     }
